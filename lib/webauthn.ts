@@ -4,8 +4,9 @@
 function getRPID(): string {
   if (typeof window === "undefined") return "localhost"
   const hostname = window.location.hostname
-  // Remove port for RP ID (WebAuthn requires just the domain)
-  return hostname
+  // For localhost, use "localhost" explicitly (WebAuthn requirement)
+  // For other domains, use hostname as-is
+  return hostname === "127.0.0.1" ? "localhost" : hostname
 }
 
 // Helper function to get the origin for WebAuthn credential creation
@@ -52,6 +53,7 @@ export async function registerPasskey(username: string): Promise<string> {
         residentKey: "required",
       },
       attestation: "none",
+      timeout: 60000,
     },
   }
 
@@ -79,6 +81,8 @@ export async function authenticatePasskey(credentialId: string): Promise<{ prfOu
         },
       ],
       userVerification: "required",
+      rpId: getRPID(),
+      timeout: 60000,
       extensions: {
         prf: {
           eval: {
@@ -86,7 +90,6 @@ export async function authenticatePasskey(credentialId: string): Promise<{ prfOu
           },
         },
       },
-      rpId: getRPID(),
     },
   }
 
